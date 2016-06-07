@@ -15,6 +15,10 @@ define sentry::command(
   $refreshonly = false,
 ) {
   include sentry
+  $config_path = $sentry::version ? {
+    /8/     => "${sentry::path}/",
+    default => "${sentry::path}/sentry.conf.py"
+  }
 
   validate_string($command)
   validate_bool($refreshonly)
@@ -22,7 +26,7 @@ define sentry::command(
   exec { "sentry_command_${title}":
     command     => join([
       "${sentry::path}/virtualenv/bin/sentry",
-      "--config=${sentry::path}/sentry.conf.py",
+      "--config=${config_path}",
       $command
     ], ' '),
     user        => $sentry::owner,

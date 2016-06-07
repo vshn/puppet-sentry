@@ -17,6 +17,7 @@ class sentry::config
   $proxy_enabled  = $sentry::proxy_enabled
   $redis_enabled  = $sentry::redis_enabled
   $extra_config   = $sentry::extra_config
+  $version        = $sentry::version
 
   $config = {
     'database' => merge(
@@ -40,6 +41,16 @@ class sentry::config
     group   => $sentry::group,
     mode    => '0640',
   } ->
+
+  if $version >= '8' {
+    file { "${sentry::path}/config.yml":
+      ensure  => present,
+      content => template('sentry/config.yml'),
+      owner   => $sentry::owner,
+      group   => $sentry::group,
+      mode    => '0640',
+    } ->
+  }
 
   file { "${sentry::path}/.initialized":
     ensure  => present,
