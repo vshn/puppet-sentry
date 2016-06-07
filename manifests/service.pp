@@ -37,7 +37,7 @@ class sentry::service
       ;
       'sentry-beat':
         command => "${command} run cron"
-    } ->
+    }
   }
   else {
     supervisord::program {
@@ -47,8 +47,8 @@ class sentry::service
       'sentry-worker':
         command => "${command} celery worker -B",
       ;
-    } ->
-  }
+    }
+  } ->
 
   anchor { 'sentry::service::end': }
 

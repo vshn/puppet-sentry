@@ -45,12 +45,12 @@ class sentry::config
   if $version >= '8' {
     file { "${sentry::path}/config.yml":
       ensure  => present,
-      content => template('sentry/config.yml'),
+      content => template('sentry/config.yml.erb'),
       owner   => $sentry::owner,
       group   => $sentry::group,
       mode    => '0640',
-    } ->
-  }
+    }
+  } ->
 
   file { "${sentry::path}/.initialized":
     ensure  => present,
