@@ -1,0 +1,27 @@
+# While a lot of configuration in Sentry can be changed via the UI, for all
+# new-style config (as of 8.0) you can also declare values here in this file
+# to enforce defaults or to ensure they cannot be changed via the UI. For more
+# information see the Sentry documentation.
+
+# If this file ever becomes compromised, it's important to regenerate your SECRET_KEY
+# Changing this value will result in all current sessions being invalidated
+system.secret-key: '<%= @secret_key %>'
+
+<% if @redis_enabled -%>
+redis.clusters:
+  default:
+    hosts:
+      0:
+        host: '<%= @config['redis']['host'] %>'
+        port: '<%= @config['redis']['port'] %>'
+<% end -%>
+system.admin-email: '<%= @email %>'
+system.url-prefix: '<%= @url %>'
+<% if @email_enabled -%>
+mail.backend: 'django.core.mail.backends.smtp.EmailBackend'
+mail.from: '<%= @config['email']['from_addr'] %>'
+mail.host: '<%= @config['email']['host'] %>'
+mail.password: '<%= @config['email']['password'] %>'
+mail.username: '<%= @config['email']['user'] %>'
+mail.port: <%= @config['email']['port'] %>
+<% end -%>
