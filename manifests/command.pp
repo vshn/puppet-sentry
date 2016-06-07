@@ -16,7 +16,7 @@ define sentry::command(
 ) {
   include sentry
   $config_path = $sentry::version ? {
-    /8/     => "${sentry::path}/",
+    /8/     => $sentry::path,
     default => "${sentry::path}/sentry.conf.py"
   }
 

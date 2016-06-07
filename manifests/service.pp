@@ -8,7 +8,7 @@ class sentry::service
 
   $version     = $sentry::version
   $config_path = $sentry::version ? {
-    /8/     => "${sentry::path}/",
+    /8/     => $sentry::path},
     default => "${sentry::path}/sentry.conf.py"
   }
 
