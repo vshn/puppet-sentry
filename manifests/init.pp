@@ -221,11 +221,6 @@ class sentry(
       $secret_key == $sentry::params::secret_key {
     notify { 'Secret key unchanged from default, this is a security risk!': }
   }
-  if $version and (
-      versioncmp($version, $sentry::params::version) < 0 or versioncmp($version, '8.0.0') >= 0
-  ) {
-    notify { "Only Sentry >= ${sentry::params::version}, < 8.0.0 is supported, use at own risk!": }
-  }
 
   anchor { 'sentry::begin': } ->
   class { 'sentry::install': } ->
