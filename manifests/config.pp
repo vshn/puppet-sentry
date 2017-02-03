@@ -40,23 +40,26 @@ class sentry::config
     owner   => $sentry::owner,
     group   => $sentry::group,
     mode    => '0640',
-  } ->
+  }
 
-  if $version >= '8' {
+  if $version =~ /^8\./ {
     file { "${sentry::path}/config.yml":
       ensure  => present,
       content => template('sentry/config.yml.erb'),
       owner   => $sentry::owner,
       group   => $sentry::group,
       mode    => '0640',
+      before  => File["${sentry::path}/.initialized"],
+      require => File["${sentry::path}/sentry.conf.py"],
     }
-  } ->
+  }
 
   file { "${sentry::path}/.initialized":
     ensure  => present,
     content => 'This file tells Puppet to avoid running an upgrade again on config change',
     owner   => $sentry::owner,
     group   => $sentry::group,
+    require => File["${sentry::path}/sentry.conf.py"],
   } ~>
 
   sentry::command { 'postconfig_upgrade':

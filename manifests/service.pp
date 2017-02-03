@@ -23,11 +23,11 @@ class sentry::service
     user            => $sentry::owner,
     autostart       => true,
     redirect_stderr => true,
+    notify          => Supervisord::Supervisorctl['sentry_reload'],
   }
 
-  anchor { 'sentry::service::begin': } ->
 
-  if $version >= '8' {
+  if $version =~ /^8\./ {
     supervisord::program {
       'sentry-http':
         command => "${command} run web",
@@ -48,12 +48,10 @@ class sentry::service
         command => "${command} celery worker -B",
       ;
     }
-  } ->
+  }
 
-  anchor { 'sentry::service::end': }
 
   if $sentry::service_restart {
-    Anchor['sentry::service::begin'] ~>
 
     supervisord::supervisorctl { 'sentry_reload':
       command     => 'reload',
