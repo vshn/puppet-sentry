@@ -16,46 +16,60 @@ class sentry::service
     "${sentry::path}/virtualenv/bin/sentry",
     "--config=${config_path}"
   ], ' ')
+  if $::running_on_systemd {
+    include ::systemd
 
-  Supervisord::Program {
-    ensure          => present,
-    directory       => $sentry::path,
-    user            => $sentry::owner,
-    autostart       => true,
-    redirect_stderr => true,
-    notify          => Supervisord::Supervisorctl['sentry_reload'],
-  }
+    systemd::resources::unit { 'sentry-http':
+      ensure     => present,
+      user       => $sentry::owner,
+      execstart  => "${command} run web",
+      workingdir => $sentry::path,
 
 
-  if $version =~ /^8\./ {
-    supervisord::program {
-      'sentry-http':
-        command => "${command} run web",
-      ;
-      'sentry-worker':
-        command => "${command} run worker",
-      ;
-      'sentry-beat':
-        command => "${command} run cron"
     }
-  }
-  else {
-    supervisord::program {
-      'sentry-http':
-        command => "${command} start http",
-      ;
-      'sentry-worker':
-        command => "${command} celery worker -B",
-      ;
+  } else {
+
+
+    Supervisord::Program {
+      ensure          => present,
+      directory       => $sentry::path,
+      user            => $sentry::owner,
+      autostart       => true,
+      redirect_stderr => true,
+      notify          => Supervisord::Supervisorctl['sentry_reload'],
     }
-  }
 
 
-  if $sentry::service_restart {
+    if $version =~ /^8\./ {
+      supervisord::program {
+        'sentry-http':
+          command => "${command} run web",
+        ;
+        'sentry-worker':
+          command => "${command} run worker",
+        ;
+        'sentry-beat':
+          command => "${command} run cron"
+      }
+    }
+    else {
+      supervisord::program {
+        'sentry-http':
+          command => "${command} start http",
+        ;
+        'sentry-worker':
+          command => "${command} celery worker -B",
+        ;
+      }
+    }
 
-    supervisord::supervisorctl { 'sentry_reload':
-      command     => 'reload',
-      refreshonly => true,
+
+    if $sentry::service_restart {
+
+      supervisord::supervisorctl { 'sentry_reload':
+        command     => 'reload',
+        refreshonly => true,
+      }
     }
   }
 }

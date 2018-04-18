@@ -222,9 +222,9 @@ class sentry(
     notify { 'Secret key unchanged from default, this is a security risk!': }
   }
 
-  anchor { 'sentry::begin': } ->
-  class { 'sentry::install': } ->
-  class { 'sentry::config': } ~>
-  class { 'sentry::service': } ->
-  anchor { 'sentry::end': }
+  anchor { 'sentry::begin': }
+  -> class { 'sentry::install': }
+  -> class { 'sentry::config': }
+  ~> class { 'sentry::service': }
+  -> anchor { 'sentry::end': }
 }
