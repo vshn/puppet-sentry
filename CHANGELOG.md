@@ -1,3 +1,7 @@
+## 2018-05-05 Release vshn-2.0.0
+
+- Support for Ubuntu 16.04 (Systemd)
+
 ## 2015-09-10 Release 1.0.0
 
 This release introduces several backward incompatible changes:

@@ -36,77 +36,70 @@ DATABASES = {
     }
 }
 
-#############
-## General ##
-#############
-
-# The administrative email for this installation.
-# Note: This will be reported back to getsentry.com as the point of contact. See
-# the beacon documentation for more information.
-
-SENTRY_BEACON = <%= @beacon_enabled.to_s.capitalize! %>
+# You should not change this setting after your database has been created
+# unless you have altered all schemas first
+SENTRY_USE_BIG_INTS = True
 
 # If you're expecting any kind of real traffic on Sentry, we highly recommend
 # configuring the CACHES and Redis settings
 
 ###########
-## Cache ##
+# General #
 ###########
+
+# Instruct Sentry that this install intends to be run by a single organization
+# and thus various UI optimizations should be enabled.
+SENTRY_SINGLE_ORGANIZATION = True
+DEBUG = False
+
+#########
+# Cache #
+#########
+
+# Sentry currently utilizes two separate mechanisms. While CACHES is not a
+# requirement, it will optimize several high throughput patterns.
+
+# If you wish to use memcached, install the dependencies and adjust the config
+# as shown:
+#
+#   pip install python-memcached
+#
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#         'LOCATION': ['127.0.0.1:11211'],
+#     }
+# }
 
 <% if @redis_enabled -%>
 SENTRY_CACHE = 'sentry.cache.redis.RedisCache'
-
-<% if @version <= '8' -%>
 ##########
 ## Redis #
 ##########
 
-# Generic Redis configuration used as defaults for various things including:
-# Buffers, Quotas, TSDB
 
-SENTRY_REDIS_OPTIONS = {
-    'hosts': {
-        0: {
-            'host': '<%= @config['redis']['host'] %>',
-            'port': <%= @config['redis']['port'] %>,
-            'db': 1,
-        }
-    }
-}
-<% end -%>
+#########
+# Queue #
+#########
 
-###########
-## Queue ##
-###########
-
-# See http://sentry.readthedocs.org/en/latest/queue/index.html for more
+# See https://docs.sentry.io/on-premise/server/queue/ for more
 # information on configuring your queue broker and workers. Sentry relies
 # on a Python framework called Celery to manage queues.
 
-# You can enable queueing of jobs by turning off the always eager setting:
-CELERY_ALWAYS_EAGER = False
 BROKER_URL = 'redis://<%= @config['redis']['host'] %>:<%= @config['redis']['port'] %>/2'
 
-#################
-## Rate Limits ##
-#################
+###############
+# Rate Limits #
+###############
+
+# Rate limits apply to notification handlers and are enforced per-project
+# automatically.
 
 SENTRY_RATELIMITER = 'sentry.ratelimits.redis.RedisRateLimiter'
-<% if @version <= '8' -%>
-SENTRY_RATELIMITER_OPTIONS = {
-    'hosts': {
-        0: {
-            'host': '<%= @config['redis']['host'] %>',
-            'port': <%= @config['redis']['port'] %>,
-            'db': 3,
-        }
-    }
-}
-<% end %>
 
-####################
-## Update Buffers ##
-####################
+##################
+# Update Buffers #
+##################
 
 # Buffers (combined with queueing) act as an intermediate layer between the
 # database and the storage API. They will greatly improve efficiency on large
@@ -114,108 +107,71 @@ SENTRY_RATELIMITER_OPTIONS = {
 # (read: if you send any kind of real data to Sentry, you should enable buffers)
 
 SENTRY_BUFFER = 'sentry.buffer.redis.RedisBuffer'
-<% if @version <= '8' -%>
-SENTRY_BUFFER_OPTIONS = {
-    'hosts': {
-        0: {
-            'host': '<%= @config['redis']['host'] %>',
-            'port': <%= @config['redis']['port'] %>,
-            'db': 4,
-        }
-    }
-}
-<% end -%>
 
-############
-## Quotas ##
-############
+##########
+# Quotas #
+##########
 
 # Quotas allow you to rate limit individual projects or the Sentry install as
 # a whole.
 
 SENTRY_QUOTAS = 'sentry.quotas.redis.RedisQuota'
-<% if @version <= '8' -%>
-SENTRY_QUOTA_OPTIONS = {
-    'hosts': {
-        0: {
-            'host': '<%= @config['redis']['host'] %>',
-            'port': <%= @config['redis']['port'] %>,
-            'db': 5,
-        }
-    }
-}
-<% end -%>
 
-##########
-## TSDB ##
-##########
+########
+# TSDB #
+########
 
 # The TSDB is used for building charts as well as making things like per-rate
 # alerts possible.
 
 SENTRY_TSDB = 'sentry.tsdb.redis.RedisTSDB'
-<% if @version <= '8' -%>
-SENTRY_TSDB_OPTIONS = {
-    'hosts': {
-        0: {
-            'host': '<%= @config['redis']['host'] %>',
-            'port': <%= @config['redis']['port'] %>,
-            'db': 6,
-      }
-    }
-}
-<% end -%>
+
 <% else -%>
 SENTRY_CACHE = 'sentry.cache.django.DjangoCache'
 <% end -%>
 
-<% if @version <= '8' and @email_enabled -%>
-#################
-## Mail Server ##
-#################
 
-# For more information check Django's documentation:
-#  https://docs.djangoproject.com/en/1.6/topics/email/?from=olddocs#e-mail-backends
+###########
+# Digests #
+###########
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# The digest backend powers notification summaries.
 
-EMAIL_HOST = '<%= @config['email']['host'] %>'
-EMAIL_HOST_PASSWORD = '<%= @config['email']['password'] %>'
-EMAIL_HOST_USER = '<%= @config['email']['user'] %>'
-EMAIL_PORT = <%= @config['email']['port'] %>
-EMAIL_USE_TLS = <%= @config['email']['use_tls'].to_s.capitalize! %>
+SENTRY_DIGESTS = 'sentry.digests.backends.redis.RedisBackend'
 
-# The email address to send on behalf of
-SERVER_EMAIL = '<%= @config['email']['from_addr'] %>'
-<% end -%>
+##############
+# Web Server #
+##############
 
-################
-## Web Server ##
-################
-
+# If you're using a reverse SSL proxy, you should enable the X-Forwarded-Proto
+# header and uncomment the following settings
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 <% if @proxy_enabled -%>
-# If you're using a reverse proxy, you should enable the X-Forwarded-Proto
-# and X-Forwarded-Host headers, and uncomment the following settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
+CSRF_COOKIE_SECURE = True
 <% end -%>
 
-SENTRY_WEB_HOST = '<%= @host %>'
-SENTRY_WEB_PORT = <%= @port %>
+# If you're not hosting at the root of your web server,
+# you need to uncomment and set it to the path where Sentry is hosted.
+# FORCE_SCRIPT_NAME = '/sentry'
+
+<% if @proxy_enabled -%>
+SENTRY_WEB_HOST = 'localhost'
+<% else -%>
+SENTRY_WEB_HOST = '0.0.0.0'
+<% end -%>
+SENTRY_WEB_PORT = 9000
 SENTRY_WEB_OPTIONS = {
-    'workers': <%= @workers %>,  # the number of gunicorn workers
-    'limit_request_line': 0,  # required for raven-js
-    'secure_scheme_headers': {'X-FORWARDED-PROTO': 'https'},
+    # 'workers': 3,  # the number of web workers
+    # 'protocol': 'uwsgi',  # Enable uwsgi protocol instead of http
 }
 
 ##########
 ## etc. ##
 ##########
-<% if @version <= '8' -%>
-# If this file ever becomes compromised, it's important to regenerate your SECRET_KEY
-# Changing this value will result in all current sessions being invalidated
-SECRET_KEY = '<%= @secret_key %>'
-<% end -%>
 
 <% Array(@extra_config).each do |line| -%>
 <%= line %>

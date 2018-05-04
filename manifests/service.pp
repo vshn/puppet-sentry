@@ -24,8 +24,18 @@ class sentry::service
       user       => $sentry::owner,
       execstart  => "${command} run web",
       workingdir => $sentry::path,
-
-
+    }
+    systemd::resources::unit { 'sentry-worker':
+      ensure     => present,
+      user       => $sentry::owner,
+      execstart  => "${command} run worker",
+      workingdir => $sentry::path,
+    }
+    systemd::resources::unit { 'sentry-cron':
+      ensure     => present,
+      user       => $sentry::owner,
+      execstart  => "${command} run cron",
+      workingdir => $sentry::path,
     }
   } else {
 
