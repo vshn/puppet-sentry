@@ -14,8 +14,9 @@ class sentry::service
 
   $command = join([
     "${sentry::path}/virtualenv/bin/sentry",
-    "--config=${config_path}"
+    "--config=${config_path}",
   ], ' ')
+
   if $::running_on_systemd {
     include ::systemd
 
@@ -43,7 +44,6 @@ class sentry::service
 
   } else {
 
-
     Supervisord::Program {
       ensure          => present,
       directory       => $sentry::path,
@@ -53,37 +53,33 @@ class sentry::service
       notify          => Supervisord::Supervisorctl['sentry_reload'],
     }
 
-
     if $version =~ /^8\./ {
       supervisord::program {
         'sentry-http':
-          command => "${command} run web",
-        ;
+          command => "${command} run web";
         'sentry-worker':
-          command => "${command} run worker",
-        ;
+          command => "${command} run worker";
         'sentry-beat':
-          command => "${command} run cron"
+          command => "${command} run cron";
       }
     }
     else {
       supervisord::program {
         'sentry-http':
-          command => "${command} start http",
-        ;
+          command => "${command} start http";
         'sentry-worker':
-          command => "${command} celery worker -B",
-        ;
+          command => "${command} celery worker -B";
       }
     }
 
 
     if $sentry::service_restart {
-
       supervisord::supervisorctl { 'sentry_reload':
         command     => 'reload',
         refreshonly => true,
       }
     }
+
   }
+
 }
