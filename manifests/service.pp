@@ -19,24 +19,28 @@ class sentry::service
   if $::running_on_systemd {
     include ::systemd
 
-    systemd::resources::unit { 'sentry-http':
-      ensure     => present,
-      user       => $sentry::owner,
-      execstart  => "${command} run web",
-      workingdir => $sentry::path,
+    systemd::resources::unit {
+      default:
+        ensure     => 'present',
+        user       => $sentry::owner,
+        workingdir => $sentry::path;
+      'sentry-cron':
+        execstart => "${command} run cron";
+      'sentry-http':
+        execstart => "${command} run web";
+      'sentry-worker':
+        execstart => "${command} run worker";
     }
-    systemd::resources::unit { 'sentry-worker':
-      ensure     => present,
-      user       => $sentry::owner,
-      execstart  => "${command} run worker",
-      workingdir => $sentry::path,
+
+    service {
+      default:
+        ensure => 'running',
+        enable => true;
+      'sentry-cron':;
+      'sentry-http':;
+      'sentry-worker':;
     }
-    systemd::resources::unit { 'sentry-cron':
-      ensure     => present,
-      user       => $sentry::owner,
-      execstart  => "${command} run cron",
-      workingdir => $sentry::path,
-    }
+
   } else {
 
 
