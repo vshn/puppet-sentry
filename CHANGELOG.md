@@ -1,3 +1,7 @@
+## UNRELEASED
+
+- Fix systemd support
+
 ## 2018-05-05 Release vshn-2.0.0
 
 - Support for Ubuntu 16.04 (Systemd)
